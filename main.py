@@ -2,9 +2,10 @@
 from optparse import OptionParser
 import re
 
-def genResult(note, dur, point):
+def genResult(note, dur, point, tie):
     durPrefix = ''
     durPostfix = ''
+    tiePostfix = ''
     if point:
         pointOutput = '.'
     else:
@@ -23,8 +24,9 @@ def genResult(note, dur, point):
             durPostfix = ' -'
     if dur == 1:
         durPostfix = ' - - -'
-
-    return durPrefix + note + pointOutput + durPostfix + " "
+    if tie:
+        tiePostfix = ' ('
+    return durPrefix + note + pointOutput + durPostfix + tiePostfix + " "
 
 def getBody(lines, type):
     isCollect = False
@@ -69,6 +71,7 @@ def convert(fromFile, toFile):
     dur = 4
     point = False
     skip = False
+    tie = False
     for c in voice:
         if c == '{':
             skip = True
@@ -80,9 +83,10 @@ def convert(fromFile, toFile):
             continue
         if c.isdigit():
             if note != '':
-                output.write(genResult(note, dur, point))
+                output.write(genResult(note, dur, point, tie))
                 dur = 4
                 point = False
+                tie = False
             note = c
         elif c == ',':
             note = note + ","
@@ -95,20 +99,22 @@ def convert(fromFile, toFile):
         elif c == '.':
             point = True
         elif c == '(':
-            output.write(c)
+            tie = True
         elif c == ')':
             if note != '':
-                output.write(genResult(note, dur, point))
+                output.write(genResult(note, dur, point, tie))
                 dur = 4
                 point = False
                 note = ''
-            output.write(c)
+                tie = False
+            output.write(c + " ")
         else:
             if note != '':
-                output.write(genResult(note, dur, point))
+                output.write(genResult(note, dur, point, tie))
                 dur = 4
                 point = False
                 note = ''
+                tie = False
     output.close()
 
 if __name__ == '__main__':
